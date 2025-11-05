@@ -23,7 +23,7 @@ export default function OrganizationTransactionsPage() {
   const organizations = useQuery(api.organizations.getUserOrganizations);
   const organization = organizations?.find((org) => org._id === organizationId);
   const transactions = useQuery(api.transactions.getUserTransactions, {
-    organizationId: organizationId as any,
+    organizationId: organization ? (organizationId as any) : undefined,
   });
   const deleteTransaction = useMutation(api.transactions.deleteTransaction);
 
@@ -33,7 +33,33 @@ export default function OrganizationTransactionsPage() {
     }
   };
 
-  if (!organization || !transactions) {
+  if (!organizations) {
+    return (
+      <div className="flex justify-center items-center h-64">
+        <div className="border-primary border-b-2 rounded-full w-8 h-8 animate-spin"></div>
+      </div>
+    );
+  }
+
+  if (!organization) {
+    return (
+      <div className="space-y-6">
+        <div className="flex items-center gap-4">
+          <div>
+            <h1 className="font-bold text-foreground text-3xl">
+              Organization Not Found
+            </h1>
+            <p className="mt-2 text-muted-foreground">
+              This organization may have been deleted or you may not have access
+              to it.
+            </p>
+          </div>
+        </div>
+      </div>
+    );
+  }
+
+  if (!transactions) {
     return (
       <div className="flex justify-center items-center h-64">
         <div className="border-primary border-b-2 rounded-full w-8 h-8 animate-spin"></div>

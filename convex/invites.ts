@@ -118,11 +118,8 @@ export const acceptInvite = mutation({
     // Update invite status
     await ctx.db.patch(args.inviteId, { status: "accepted" });
 
-    // Update user organization
-    await ctx.db.patch(user._id, {
-      organizationId: invite.organizationId,
-      role: invite.role,
-    });
+    // User is now a member via the accepted invite - no need to update user record
+    // The membership is tracked through the accepted invite status
 
     return args.inviteId;
   },
@@ -176,7 +173,14 @@ export const kickMember = mutation({
     if (!organization) throw new Error("Organization not found");
 
     const isOwner = organization.ownerId === user._id;
-    const isMember = user.organizationId === args.organizationId;
+
+    // Check if user is a member via accepted invites
+    const isMember = await ctx.db
+      .query("organizationInvites")
+      .withIndex("by_email", (q) => q.eq("email", user.email))
+      .filter((q) => q.eq(q.field("organizationId"), args.organizationId))
+      .filter((q) => q.eq(q.field("status"), "accepted"))
+      .first();
 
     if (!isOwner && !isMember) {
       throw new Error("Not authorized");
@@ -185,17 +189,24 @@ export const kickMember = mutation({
     // Cannot kick yourself
     if (args.userId === user._id) throw new Error("Cannot kick yourself");
 
-    // Check if target user is a member of the organization
+    // Get target user first
     const targetUser = await ctx.db.get(args.userId);
-    if (!targetUser || targetUser.organizationId !== args.organizationId) {
+    if (!targetUser) throw new Error("User not found");
+
+    // Check if target user is a member of the organization via accepted invites
+    const targetUserInvite = await ctx.db
+      .query("organizationInvites")
+      .withIndex("by_email", (q) => q.eq("email", targetUser.email))
+      .filter((q) => q.eq(q.field("organizationId"), args.organizationId))
+      .filter((q) => q.eq(q.field("status"), "accepted"))
+      .first();
+
+    if (!targetUserInvite) {
       throw new Error("User is not a member of this organization");
     }
 
-    // Remove user from organization
-    await ctx.db.patch(args.userId, {
-      organizationId: undefined,
-      role: undefined,
-    });
+    // Remove user from organization by declining their invite
+    await ctx.db.patch(targetUserInvite._id, { status: "declined" });
 
     return args.userId;
   },

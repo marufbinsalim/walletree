@@ -8,12 +8,9 @@ export default defineSchema({
     firstName: v.optional(v.string()),
     lastName: v.optional(v.string()),
     imageUrl: v.optional(v.string()),
-    organizationId: v.optional(v.id("organizations")),
-    role: v.optional(v.union(v.literal("owner"), v.literal("member"))),
   })
     .index("by_clerk_id", ["clerkId"])
-    .index("by_email", ["email"])
-    .index("by_organization", ["organizationId"]),
+    .index("by_email", ["email"]),
 
   organizations: defineTable({
     name: v.string(),

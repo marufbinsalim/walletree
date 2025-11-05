@@ -4,7 +4,8 @@ import { ClerkProvider, useAuth } from "@clerk/nextjs";
 import { ConvexProvider, ConvexReactClient } from "convex/react";
 import { UserButton } from "@clerk/nextjs";
 import Link from "next/link";
-import { usePathname } from "next/navigation";
+import { usePathname, useRouter } from "next/navigation";
+import { useEffect } from "react";
 import { cn } from "../../lib/utils";
 import { ConvexProviderWithClerk } from "convex/react-clerk";
 import { ThemeToggle } from "../../components/ui/theme-toggle";
@@ -27,7 +28,27 @@ export default function DashboardLayout({
   children: React.ReactNode;
 }) {
   const pathname = usePathname();
+  const router = useRouter();
+  const { isSignedIn, isLoaded } = useAuth();
   const pendingInvites = useQuery(api.invites.getPendingInvitesForUser);
+
+  useEffect(() => {
+    if (isLoaded && !isSignedIn) {
+      router.push("/");
+    }
+  }, [isLoaded, isSignedIn, router]);
+
+  if (!isLoaded) {
+    return (
+      <div className="flex justify-center items-center min-h-screen">
+        <div className="border-primary border-b-2 rounded-full w-8 h-8 animate-spin"></div>
+      </div>
+    );
+  }
+
+  if (!isSignedIn) {
+    return null; // Will redirect in useEffect
+  }
 
   return (
     <ClerkProvider

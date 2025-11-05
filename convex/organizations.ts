@@ -20,16 +20,30 @@ export const getUserOrganizations = query({
       .withIndex("by_owner", (q) => q.eq("ownerId", user._id))
       .collect();
 
-    // Get organizations where user is a member
-    const memberOrganizations = user.organizationId
-      ? await ctx.db
-          .query("organizations")
-          .filter((q) => q.eq(q.field("_id"), user.organizationId))
-          .collect()
-      : [];
+    // Get organizations where user is a member (via accepted invites)
+    const acceptedInvites = await ctx.db
+      .query("organizationInvites")
+      .withIndex("by_email", (q) => q.eq("email", user.email))
+      .filter((q) => q.eq(q.field("status"), "accepted"))
+      .collect();
+
+    const memberOrganizationIds = acceptedInvites.map(
+      (invite) => invite.organizationId
+    );
+    const memberOrganizations = await Promise.all(
+      memberOrganizationIds.map((id) => ctx.db.get(id))
+    );
+
+    // Filter out nulls and combine with owned organizations
+    const validMemberOrganizations = memberOrganizations.filter(
+      (org) => org !== null
+    );
 
     // Combine and deduplicate
-    const allOrganizations = [...ownedOrganizations, ...memberOrganizations];
+    const allOrganizations = [
+      ...ownedOrganizations,
+      ...validMemberOrganizations,
+    ];
     const uniqueOrganizations = allOrganizations.filter(
       (org, index, self) => index === self.findIndex((o) => o._id === org._id)
     );
@@ -59,21 +73,44 @@ export const getOrganizationMembers = query({
       .first();
 
     const isMember = await ctx.db
-      .query("users")
+      .query("organizationInvites")
+      .withIndex("by_email", (q) => q.eq("email", user.email))
       .filter((q) => q.eq(q.field("organizationId"), args.organizationId))
-      .filter((q) => q.eq(q.field("_id"), user._id))
+      .filter((q) => q.eq(q.field("status"), "accepted"))
       .first();
 
     if (!isOwner && !isMember) throw new Error("Not authorized");
 
-    const members = await ctx.db
-      .query("users")
+    // Get all accepted invites for this organization
+    const acceptedInvites = await ctx.db
+      .query("organizationInvites")
       .withIndex("by_organization", (q) =>
         q.eq("organizationId", args.organizationId)
       )
+      .filter((q) => q.eq(q.field("status"), "accepted"))
       .collect();
 
-    return members;
+    // Get user details for each member
+    const memberEmails = acceptedInvites.map((invite) => invite.email);
+    const members = await Promise.all(
+      memberEmails.map((email) =>
+        ctx.db
+          .query("users")
+          .withIndex("by_email", (q) => q.eq("email", email))
+          .first()
+      )
+    );
+
+    // Filter out nulls and add owner
+    const validMembers = members.filter((member) => member !== null);
+
+    // Add owner to the list if not already included
+    const owner = await ctx.db.get(user._id);
+    if (owner && !validMembers.find((m) => m._id === owner._id)) {
+      validMembers.unshift(owner);
+    }
+
+    return validMembers;
   },
 });
 
@@ -100,12 +137,6 @@ export const createOrganization = mutation({
       ownerId: user._id,
       createdAt: Date.now(),
       updatedAt: Date.now(),
-    });
-
-    // Update user to be part of this organization
-    await ctx.db.patch(user._id, {
-      organizationId,
-      role: "owner",
     });
 
     return organizationId;
@@ -178,19 +209,16 @@ export const deleteOrganization = mutation({
       await ctx.db.delete(transaction._id);
     }
 
-    // Remove organization from all users who are members
-    const members = await ctx.db
-      .query("users")
+    // Delete all invites associated with this organization
+    const organizationInvites = await ctx.db
+      .query("organizationInvites")
       .withIndex("by_organization", (q) =>
         q.eq("organizationId", args.organizationId)
       )
       .collect();
 
-    for (const member of members) {
-      await ctx.db.patch(member._id, {
-        organizationId: undefined,
-        role: undefined,
-      });
+    for (const invite of organizationInvites) {
+      await ctx.db.delete(invite._id);
     }
 
     // Delete the organization

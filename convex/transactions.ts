@@ -17,14 +17,22 @@ export const getUserTransactions = query({
     let transactionsQuery = ctx.db.query("transactions");
 
     if (args.organizationId) {
-      // Check if user is member of the organization
-      const isMember = await ctx.db
-        .query("users")
-        .filter((q) => q.eq(q.field("organizationId"), args.organizationId))
-        .filter((q) => q.eq(q.field("_id"), user._id))
+      // Check if user is the owner of the organization
+      const isOwner = await ctx.db
+        .query("organizations")
+        .filter((q) => q.eq(q.field("_id"), args.organizationId))
+        .filter((q) => q.eq(q.field("ownerId"), user._id))
         .first();
 
-      if (!isMember) throw new Error("Not authorized");
+      // Check if user is a member via accepted invites
+      const isMember = await ctx.db
+        .query("organizationInvites")
+        .withIndex("by_email", (q) => q.eq("email", user.email))
+        .filter((q) => q.eq(q.field("organizationId"), args.organizationId))
+        .filter((q) => q.eq(q.field("status"), "accepted"))
+        .first();
+
+      if (!isMember && !isOwner) throw new Error("Not authorized");
 
       transactionsQuery = transactionsQuery.filter((q) =>
         q.eq(q.field("organizationId"), args.organizationId)
@@ -75,13 +83,22 @@ export const getMonthlyStats = query({
       .filter((q) => q.lte(q.field("date"), endOfMonth));
 
     if (args.organizationId) {
-      const isMember = await ctx.db
-        .query("users")
-        .filter((q) => q.eq(q.field("organizationId"), args.organizationId))
-        .filter((q) => q.eq(q.field("_id"), user._id))
+      // Check if user is the owner of the organization
+      const isOwner = await ctx.db
+        .query("organizations")
+        .filter((q) => q.eq(q.field("_id"), args.organizationId))
+        .filter((q) => q.eq(q.field("ownerId"), user._id))
         .first();
 
-      if (!isMember) throw new Error("Not authorized");
+      // Check if user is a member via accepted invites
+      const isMember = await ctx.db
+        .query("organizationInvites")
+        .withIndex("by_email", (q) => q.eq("email", user.email))
+        .filter((q) => q.eq(q.field("organizationId"), args.organizationId))
+        .filter((q) => q.eq(q.field("status"), "accepted"))
+        .first();
+
+      if (!isMember && !isOwner) throw new Error("Not authorized");
 
       transactionsQuery = transactionsQuery.filter((q) =>
         q.eq(q.field("organizationId"), args.organizationId)
@@ -133,13 +150,22 @@ export const createTransaction = mutation({
     if (!user) return { totalSpent: 0, totalEarned: 0, transactionCount: 0 };
 
     if (args.organizationId) {
-      const isMember = await ctx.db
-        .query("users")
-        .filter((q) => q.eq(q.field("organizationId"), args.organizationId))
-        .filter((q) => q.eq(q.field("_id"), user._id))
+      // Check if user is the owner of the organization
+      const isOwner = await ctx.db
+        .query("organizations")
+        .filter((q) => q.eq(q.field("_id"), args.organizationId))
+        .filter((q) => q.eq(q.field("ownerId"), user._id))
         .first();
 
-      if (!isMember) throw new Error("Not authorized");
+      // Check if user is a member via accepted invites
+      const isMember = await ctx.db
+        .query("organizationInvites")
+        .withIndex("by_email", (q) => q.eq("email", user.email))
+        .filter((q) => q.eq(q.field("organizationId"), args.organizationId))
+        .filter((q) => q.eq(q.field("status"), "accepted"))
+        .first();
+
+      if (!isMember && !isOwner) throw new Error("Not authorized");
     }
 
     const transactionId = await ctx.db.insert("transactions", {
@@ -181,11 +207,28 @@ export const updateTransaction = mutation({
     const transaction = await ctx.db.get(args.transactionId);
     if (!transaction) throw new Error("Transaction not found");
 
-    // Check if user owns the transaction or is in the same organization
-    const canEdit =
-      transaction.userId === user._id ||
-      (transaction.organizationId &&
-        user.organizationId === transaction.organizationId);
+    // Check if user owns the transaction or is authorized for the organization
+    const canEdit = transaction.userId === user._id;
+    if (transaction.organizationId && !canEdit) {
+      // Check if user is the owner of the organization
+      const isOwner = await ctx.db
+        .query("organizations")
+        .filter((q) => q.eq(q.field("_id"), transaction.organizationId))
+        .filter((q) => q.eq(q.field("ownerId"), user._id))
+        .first();
+
+      // Check if user is a member via accepted invites
+      const isMember = await ctx.db
+        .query("organizationInvites")
+        .withIndex("by_email", (q) => q.eq("email", user.email))
+        .filter((q) =>
+          q.eq(q.field("organizationId"), transaction.organizationId)
+        )
+        .filter((q) => q.eq(q.field("status"), "accepted"))
+        .first();
+
+      if (!isOwner && !isMember) throw new Error("Not authorized");
+    }
 
     if (!canEdit) throw new Error("Not authorized");
 
@@ -218,11 +261,28 @@ export const deleteTransaction = mutation({
     const transaction = await ctx.db.get(args.transactionId);
     if (!transaction) throw new Error("Transaction not found");
 
-    // Check if user owns the transaction or is in the same organization
-    const canDelete =
-      transaction.userId === user._id ||
-      (transaction.organizationId &&
-        user.organizationId === transaction.organizationId);
+    // Check if user owns the transaction or is authorized for the organization
+    const canDelete = transaction.userId === user._id;
+    if (transaction.organizationId && !canDelete) {
+      // Check if user is the owner of the organization
+      const isOwner = await ctx.db
+        .query("organizations")
+        .filter((q) => q.eq(q.field("_id"), transaction.organizationId))
+        .filter((q) => q.eq(q.field("ownerId"), user._id))
+        .first();
+
+      // Check if user is a member via accepted invites
+      const isMember = await ctx.db
+        .query("organizationInvites")
+        .withIndex("by_email", (q) => q.eq("email", user.email))
+        .filter((q) =>
+          q.eq(q.field("organizationId"), transaction.organizationId)
+        )
+        .filter((q) => q.eq(q.field("status"), "accepted"))
+        .first();
+
+      if (!isOwner && !isMember) throw new Error("Not authorized");
+    }
 
     if (!canDelete) throw new Error("Not authorized");
 

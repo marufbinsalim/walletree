@@ -52,7 +52,9 @@ export default function OrganizationsPage() {
                 <div className="flex-1">
                   <div className="flex items-center gap-3">
                     <h3 className="font-semibold text-lg">{org.name}</h3>
-                    <Badge variant="outline">Owner</Badge>
+                    <Badge variant="outline">
+                      {org.ownerId === currentUser?._id ? "Owner" : "Member"}
+                    </Badge>
                   </div>
                   {org.description && (
                     <p className="mt-1 text-muted-foreground">

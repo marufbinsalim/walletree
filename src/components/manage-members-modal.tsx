@@ -49,9 +49,9 @@ export function ManageMembersModal({
 
   // Check if current user is owner
   const currentUser = useQuery(api.users.getCurrentUser);
-  const isOwner = members?.some(
-    (member) => member._id === currentUser?._id && member.role === "owner"
-  );
+  const organizations = useQuery(api.organizations.getUserOrganizations);
+  const organization = organizations?.find((org) => org._id === organizationId);
+  const isOwner = organization?.ownerId === currentUser?._id;
 
   const createInvite = useMutation(api.invites.createInvite);
   const revokeInvite = useMutation(api.invites.revokeInvite);
@@ -180,12 +180,16 @@ export function ManageMembersModal({
                   <div className="flex items-center gap-3">
                     <Badge
                       variant={
-                        member.role === "owner" ? "default" : "secondary"
+                        member._id === organization?.ownerId
+                          ? "default"
+                          : "secondary"
                       }
                     >
-                      {member.role}
+                      {member._id === organization?.ownerId
+                        ? "owner"
+                        : "member"}
                     </Badge>
-                    {isOwner && member.role !== "owner" && (
+                    {isOwner && member._id !== organization?.ownerId && (
                       <Button
                         variant="outline"
                         size="sm"
