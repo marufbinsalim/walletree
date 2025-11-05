@@ -127,3 +127,44 @@ export const updateOrganization = mutation({
     return args.organizationId;
   },
 });
+
+export const deleteOrganization = mutation({
+  args: {
+    organizationId: v.id("organizations"),
+  },
+  handler: async (ctx, args) => {
+    const identity = await ctx.auth.getUserIdentity();
+    if (!identity) throw new Error("Not authenticated");
+
+    const user = await ctx.db
+      .query("users")
+      .withIndex("by_clerk_id", (q) => q.eq("clerkId", identity.subject))
+      .first();
+
+    if (!user) throw new Error("User not found");
+
+    // Check if user is the owner
+    const organization = await ctx.db.get(args.organizationId);
+    if (!organization || organization.ownerId !== user._id) {
+      throw new Error("Not authorized");
+    }
+
+    // Remove organization from all users who are members
+    const members = await ctx.db
+      .query("users")
+      .withIndex("by_organization", (q) => q.eq("organizationId", args.organizationId))
+      .collect();
+
+    for (const member of members) {
+      await ctx.db.patch(member._id, {
+        organizationId: undefined,
+        role: undefined,
+      });
+    }
+
+    // Delete the organization
+    await ctx.db.delete(args.organizationId);
+
+    return args.organizationId;
+  },
+});

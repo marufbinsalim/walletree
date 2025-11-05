@@ -6,8 +6,9 @@ import { api } from "../../../../convex/_generated/api";
 import { Button } from "../../../components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "../../../components/ui/card";
 import { Badge } from "../../../components/ui/badge";
-import { Plus, Users, Settings } from "lucide-react";
+import { Plus, Users, Settings, Trash2 } from "lucide-react";
 import { CreateOrganizationModal } from "../../../components/create-organization-modal";
+import { DeleteOrganizationModal } from "../../../components/delete-organization-modal";
 
 export default function OrganizationsPage() {
   const organizations = useQuery(api.organizations.getUserOrganizations);
@@ -52,10 +53,15 @@ export default function OrganizationsPage() {
                     <Users className="w-4 h-4 mr-2" />
                     Members
                   </Button>
-                  <Button variant="outline" size="sm">
-                    <Settings className="w-4 h-4 mr-2" />
-                    Settings
-                  </Button>
+                  <DeleteOrganizationModal
+                    organizationId={org._id}
+                    organizationName={org.name}
+                  >
+                    <Button variant="destructive" size="sm">
+                      <Trash2 className="w-4 h-4 mr-2" />
+                      Delete
+                    </Button>
+                  </DeleteOrganizationModal>
                 </div>
               </div>
             </CardContent>

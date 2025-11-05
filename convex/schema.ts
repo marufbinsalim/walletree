@@ -9,7 +9,7 @@ export default defineSchema({
     lastName: v.optional(v.string()),
     imageUrl: v.optional(v.string()),
     organizationId: v.optional(v.id("organizations")),
-    role: v.union(v.literal("owner"), v.literal("member")),
+    role: v.optional(v.union(v.literal("owner"), v.literal("member"))),
   })
     .index("by_clerk_id", ["clerkId"])
     .index("by_organization", ["organizationId"]),
@@ -26,7 +26,7 @@ export default defineSchema({
   organizationInvites: defineTable({
     organizationId: v.id("organizations"),
     email: v.string(),
-    role: v.union(v.literal("owner"), v.literal("member")),
+    role: v.optional(v.union(v.literal("owner"), v.literal("member"))),
     status: v.union(v.literal("pending"), v.literal("accepted"), v.literal("declined")),
     invitedBy: v.id("users"),
     invitedAt: v.number(),
