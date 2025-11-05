@@ -14,7 +14,10 @@ import {
 import { Badge } from "../../../../components/ui/badge";
 import { Plus, Edit, Trash2, ArrowLeft } from "lucide-react";
 import { CreateTransactionModal } from "../../../../components/create-transaction-modal";
+import { DeleteTransactionModal } from "../../../../components/delete-transaction-modal";
+import { EditTransactionModal } from "../../../../components/edit-transaction-modal";
 import Link from "next/link";
+import toast from "react-hot-toast";
 
 export default function OrganizationTransactionsPage() {
   const { organization_id } = useParams();
@@ -26,12 +29,6 @@ export default function OrganizationTransactionsPage() {
     organizationId: organization ? (organizationId as any) : undefined,
   });
   const deleteTransaction = useMutation(api.transactions.deleteTransaction);
-
-  const handleDelete = async (transactionId: any) => {
-    if (confirm("Are you sure you want to delete this transaction?")) {
-      await deleteTransaction({ transactionId });
-    }
-  };
 
   if (!organizations) {
     return (
@@ -101,12 +98,15 @@ export default function OrganizationTransactionsPage() {
 
       <div className="gap-4 grid">
         {transactions.map((transaction) => (
-          <Card key={transaction._id}>
-            <CardContent className="p-6">
-              <div className="flex justify-between items-start">
-                <div className="flex-1">
-                  <div className="flex items-center gap-3">
-                    <h3 className="font-semibold text-lg">
+          <Card
+            key={transaction._id}
+            className="hover:shadow-md border-l-4 border-l-primary/20 transition-shadow"
+          >
+            <CardContent className="p-2">
+              <div className="flex justify-between items-center">
+                <div className="flex-1 min-w-0">
+                  <div className="flex items-center gap-2">
+                    <h3 className="font-semibold text-sm truncate">
                       {transaction.description}
                     </h3>
                     <Badge
@@ -115,24 +115,41 @@ export default function OrganizationTransactionsPage() {
                           ? "default"
                           : "destructive"
                       }
+                      className="px-1.5 py-0.5 text-xs"
                     >
                       {transaction.type}
                     </Badge>
                   </div>
-                  <p className="mt-1 text-muted-foreground">
-                    {new Date(transaction.date).toLocaleDateString()}
-                  </p>
-                  <div className="flex gap-2 mt-2">
-                    {transaction.tags.map((tag, index) => (
-                      <Badge key={index} variant="outline" className="text-xs">
-                        {tag}
-                      </Badge>
-                    ))}
+                  <div className="flex items-center gap-2">
+                    <p className="text-muted-foreground text-xs">
+                      {new Date(transaction.date).toLocaleDateString()}
+                    </p>
+                    {transaction.tags.length > 0 && (
+                      <div className="flex gap-1">
+                        {transaction.tags.slice(0, 2).map((tag, index) => (
+                          <Badge
+                            key={index}
+                            variant="outline"
+                            className="px-1.5 py-0 text-xs"
+                          >
+                            {tag}
+                          </Badge>
+                        ))}
+                        {transaction.tags.length > 2 && (
+                          <Badge
+                            variant="outline"
+                            className="px-1.5 py-0 text-xs"
+                          >
+                            +{transaction.tags.length - 2}
+                          </Badge>
+                        )}
+                      </div>
+                    )}
                   </div>
                 </div>
-                <div className="flex items-center gap-4">
+                <div className="flex items-center gap-2 ml-2">
                   <span
-                    className={`text-xl font-bold ${
+                    className={`text-sm font-bold ${
                       transaction.type === "earning"
                         ? "text-green-600"
                         : "text-red-600"
@@ -141,17 +158,24 @@ export default function OrganizationTransactionsPage() {
                     {transaction.type === "earning" ? "+" : "-"}$
                     {transaction.amount.toFixed(2)}
                   </span>
-                  <div className="flex gap-2">
-                    <Button variant="outline" size="sm">
-                      <Edit className="w-4 h-4" />
-                    </Button>
-                    <Button
-                      variant="outline"
-                      size="sm"
-                      onClick={() => handleDelete(transaction._id)}
+                  <div className="flex gap-0.5">
+                    <EditTransactionModal transactionId={transaction._id}>
+                      <Button variant="ghost" size="sm" className="p-0 w-6 h-6">
+                        <Edit className="w-3 h-3" />
+                      </Button>
+                    </EditTransactionModal>
+                    <DeleteTransactionModal
+                      transactionId={transaction._id}
+                      transactionDescription={transaction.description}
                     >
-                      <Trash2 className="w-4 h-4" />
-                    </Button>
+                      <Button
+                        variant="ghost"
+                        size="sm"
+                        className="hover:bg-red-50 p-0 w-6 h-6 text-red-600 hover:text-red-700"
+                      >
+                        <Trash2 className="w-3 h-3" />
+                      </Button>
+                    </DeleteTransactionModal>
                   </div>
                 </div>
               </div>

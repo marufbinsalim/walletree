@@ -24,7 +24,7 @@ import {
   CheckCircle,
   XCircle,
 } from "lucide-react";
-import { toast } from "react-hot-toast";
+import toast from "react-hot-toast";
 
 interface ManageMembersModalProps {
   organizationId: string;
@@ -76,32 +76,76 @@ export function ManageMembersModal({
   };
 
   const handleRevokeInvite = async (inviteId: string) => {
-    if (!confirm("Are you sure you want to revoke this invite?")) return;
-
-    try {
-      await revokeInvite({ inviteId: inviteId as any });
-      toast.success("Invite revoked successfully!");
-    } catch (error) {
-      toast.error(
-        error instanceof Error ? error.message : "Failed to revoke invite"
-      );
-    }
+    toast((t) => (
+      <div>
+        <p>Are you sure you want to revoke this invite?</p>
+        <div className="flex gap-2 mt-2">
+          <button
+            onClick={async () => {
+              try {
+                await revokeInvite({ inviteId: inviteId as any });
+                toast.dismiss(t.id);
+                toast.success("Invite revoked successfully!");
+              } catch (error) {
+                toast.dismiss(t.id);
+                toast.error(
+                  error instanceof Error
+                    ? error.message
+                    : "Failed to revoke invite"
+                );
+              }
+            }}
+            className="bg-red-600 px-3 py-1 rounded text-white text-sm"
+          >
+            Revoke
+          </button>
+          <button
+            onClick={() => toast.dismiss(t.id)}
+            className="bg-gray-600 px-3 py-1 rounded text-white text-sm"
+          >
+            Cancel
+          </button>
+        </div>
+      </div>
+    ));
   };
 
   const handleKickMember = async (userId: string) => {
-    if (!confirm("Are you sure you want to remove this member?")) return;
-
-    try {
-      await kickMember({
-        userId: userId as any,
-        organizationId: organizationId as any,
-      });
-      toast.success("Member removed successfully!");
-    } catch (error) {
-      toast.error(
-        error instanceof Error ? error.message : "Failed to remove member"
-      );
-    }
+    toast((t) => (
+      <div>
+        <p>Are you sure you want to remove this member?</p>
+        <div className="flex gap-2 mt-2">
+          <button
+            onClick={async () => {
+              try {
+                await kickMember({
+                  userId: userId as any,
+                  organizationId: organizationId as any,
+                });
+                toast.dismiss(t.id);
+                toast.success("Member removed successfully!");
+              } catch (error) {
+                toast.dismiss(t.id);
+                toast.error(
+                  error instanceof Error
+                    ? error.message
+                    : "Failed to remove member"
+                );
+              }
+            }}
+            className="bg-red-600 px-3 py-1 rounded text-white text-sm"
+          >
+            Remove
+          </button>
+          <button
+            onClick={() => toast.dismiss(t.id)}
+            className="bg-gray-600 px-3 py-1 rounded text-white text-sm"
+          >
+            Cancel
+          </button>
+        </div>
+      </div>
+    ));
   };
 
   const getStatusIcon = (status: string) => {

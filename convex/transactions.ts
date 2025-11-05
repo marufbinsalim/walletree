@@ -208,7 +208,7 @@ export const updateTransaction = mutation({
     if (!transaction) throw new Error("Transaction not found");
 
     // Check if user owns the transaction or is authorized for the organization
-    const canEdit = transaction.userId === user._id;
+    let canEdit = transaction.userId === user._id;
     if (transaction.organizationId && !canEdit) {
       // Check if user is the owner of the organization
       const isOwner = await ctx.db
@@ -227,7 +227,7 @@ export const updateTransaction = mutation({
         .filter((q) => q.eq(q.field("status"), "accepted"))
         .first();
 
-      if (!isOwner && !isMember) throw new Error("Not authorized");
+      canEdit = !!(isOwner || isMember);
     }
 
     if (!canEdit) throw new Error("Not authorized");
@@ -262,7 +262,7 @@ export const deleteTransaction = mutation({
     if (!transaction) throw new Error("Transaction not found");
 
     // Check if user owns the transaction or is authorized for the organization
-    const canDelete = transaction.userId === user._id;
+    let canDelete = transaction.userId === user._id;
     if (transaction.organizationId && !canDelete) {
       // Check if user is the owner of the organization
       const isOwner = await ctx.db
@@ -281,7 +281,7 @@ export const deleteTransaction = mutation({
         .filter((q) => q.eq(q.field("status"), "accepted"))
         .first();
 
-      if (!isOwner && !isMember) throw new Error("Not authorized");
+      canDelete = !!(isOwner || isMember);
     }
 
     if (!canDelete) throw new Error("Not authorized");

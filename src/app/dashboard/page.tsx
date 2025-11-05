@@ -21,7 +21,7 @@ import { CreateOrganizationModal } from "../../components/create-organization-mo
 import { Button } from "../../components/ui/button";
 import { Badge } from "../../components/ui/badge";
 import { CheckCircle, XCircle, Users } from "lucide-react";
-import { toast } from "react-hot-toast";
+import toast from "react-hot-toast";
 
 export default function DashboardPage() {
   const organizations = useQuery(api.organizations.getUserOrganizations);
@@ -44,16 +44,38 @@ export default function DashboardPage() {
   };
 
   const handleDeclineInvite = async (inviteId: string) => {
-    if (!confirm("Are you sure you want to decline this invite?")) return;
-
-    try {
-      await declineInvite({ inviteId: inviteId as any });
-      toast.success("Invite declined successfully!");
-    } catch (error) {
-      toast.error(
-        error instanceof Error ? error.message : "Failed to decline invite"
-      );
-    }
+    toast((t) => (
+      <div>
+        <p>Are you sure you want to decline this invite?</p>
+        <div className="flex gap-2 mt-2">
+          <button
+            onClick={async () => {
+              try {
+                await declineInvite({ inviteId: inviteId as any });
+                toast.dismiss(t.id);
+                toast.success("Invite declined successfully!");
+              } catch (error) {
+                toast.dismiss(t.id);
+                toast.error(
+                  error instanceof Error
+                    ? error.message
+                    : "Failed to decline invite"
+                );
+              }
+            }}
+            className="bg-red-600 px-3 py-1 rounded text-white text-sm"
+          >
+            Decline
+          </button>
+          <button
+            onClick={() => toast.dismiss(t.id)}
+            className="bg-gray-600 px-3 py-1 rounded text-white text-sm"
+          >
+            Cancel
+          </button>
+        </div>
+      </div>
+    ));
   };
 
   // Set the first organization as selected when organizations load
@@ -298,17 +320,6 @@ export default function DashboardPage() {
           </CardContent>
         </Card>
       </div>
-
-      <Card>
-        <CardHeader>
-          <CardTitle>Recent Activity</CardTitle>
-        </CardHeader>
-        <CardContent>
-          <p className="text-muted-foreground">
-            Transaction history will appear here.
-          </p>
-        </CardContent>
-      </Card>
     </div>
   );
 }
