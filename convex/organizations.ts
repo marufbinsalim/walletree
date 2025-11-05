@@ -149,6 +149,16 @@ export const deleteOrganization = mutation({
       throw new Error("Not authorized");
     }
 
+    // Delete all transactions associated with this organization
+    const organizationTransactions = await ctx.db
+      .query("transactions")
+      .withIndex("by_organization", (q) => q.eq("organizationId", args.organizationId))
+      .collect();
+
+    for (const transaction of organizationTransactions) {
+      await ctx.db.delete(transaction._id);
+    }
+
     // Remove organization from all users who are members
     const members = await ctx.db
       .query("users")

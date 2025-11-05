@@ -25,8 +25,8 @@ export default function OrganizationsPage() {
     <div className="space-y-6">
       <div className="flex justify-between items-center">
         <div>
-          <h1 className="text-3xl font-bold text-gray-900">Organizations</h1>
-          <p className="text-gray-600 mt-2">Manage your organizations and team members.</p>
+          <h1 className="text-3xl font-bold text-foreground">Organizations</h1>
+          <p className="text-muted-foreground mt-2">Manage your organizations and team members.</p>
         </div>
         <CreateOrganizationModal />
       </div>
@@ -42,9 +42,9 @@ export default function OrganizationsPage() {
                     <Badge variant="outline">Owner</Badge>
                   </div>
                   {org.description && (
-                    <p className="text-gray-600 mt-1">{org.description}</p>
+                    <p className="text-muted-foreground mt-1">{org.description}</p>
                   )}
-                  <p className="text-sm text-gray-500 mt-2">
+                  <p className="text-sm text-muted-foreground mt-2">
                     Created {new Date(org.createdAt).toLocaleDateString()}
                   </p>
                 </div>
@@ -71,7 +71,7 @@ export default function OrganizationsPage() {
         {organizations.length === 0 && (
           <Card>
             <CardContent className="p-12 text-center">
-              <p className="text-gray-500 mb-4">No organizations yet.</p>
+              <p className="text-muted-foreground mb-4">No organizations yet.</p>
               <CreateOrganizationModal>
                 <Button>
                   <Plus className="w-4 h-4 mr-2" />

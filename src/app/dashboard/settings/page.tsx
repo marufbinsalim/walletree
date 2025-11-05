@@ -21,8 +21,8 @@ export default function SettingsPage() {
   return (
     <div className="space-y-6">
       <div>
-        <h1 className="text-3xl font-bold text-gray-900">Settings</h1>
-        <p className="text-gray-600 mt-2">Manage your account and preferences.</p>
+        <h1 className="text-3xl font-bold text-foreground">Settings</h1>
+        <p className="text-muted-foreground mt-2">Manage your account and preferences.</p>
       </div>
 
       <div className="grid gap-6">
@@ -32,22 +32,22 @@ export default function SettingsPage() {
           </CardHeader>
           <CardContent className="space-y-4">
             <div className="flex items-center gap-3">
-              <User className="w-5 h-5 text-gray-400" />
+              <User className="w-5 h-5 text-muted-foreground" />
               <div>
                 <p className="font-medium">
                   {user.firstName && user.lastName
                     ? `${user.firstName} ${user.lastName}`
                     : "Name not set"}
                 </p>
-                <p className="text-sm text-gray-500">Full name</p>
+                <p className="text-sm text-muted-foreground">Full name</p>
               </div>
             </div>
 
             <div className="flex items-center gap-3">
-              <Mail className="w-5 h-5 text-gray-400" />
+              <Mail className="w-5 h-5 text-muted-foreground" />
               <div>
                 <p className="font-medium">{user.email}</p>
-                <p className="text-sm text-gray-500">Email address</p>
+                <p className="text-sm text-muted-foreground">Email address</p>
               </div>
             </div>
 
@@ -55,7 +55,7 @@ export default function SettingsPage() {
               <Badge variant={user.role === "owner" ? "default" : "secondary"}>
                 {user.role}
               </Badge>
-              <p className="text-sm text-gray-500">Account role</p>
+              <p className="text-sm text-muted-foreground">Account role</p>
             </div>
           </CardContent>
         </Card>
@@ -67,14 +67,14 @@ export default function SettingsPage() {
           <CardContent>
             {user.organizationId ? (
               <div className="space-y-4">
-                <p className="text-gray-600">You are a member of an organization.</p>
+                <p className="text-muted-foreground">You are a member of an organization.</p>
                 <Button variant="outline">
                   View Organization Settings
                 </Button>
               </div>
             ) : (
               <div className="space-y-4">
-                <p className="text-gray-600">You are not part of any organization.</p>
+                <p className="text-muted-foreground">You are not part of any organization.</p>
                 <Button>
                   Create Organization
                 </Button>

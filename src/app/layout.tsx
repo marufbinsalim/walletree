@@ -4,6 +4,7 @@ import { ClerkProvider, useAuth } from '@clerk/nextjs';
 import { ConvexReactClient } from "convex/react";
 import "./globals.css";
 import { ConvexProviderWithClerk } from 'convex/react-clerk';
+import { ThemeProvider } from '../components/theme-provider';
 
 const convex = new ConvexReactClient(process.env.NEXT_PUBLIC_CONVEX_URL!);
 
@@ -13,13 +14,15 @@ export default function RootLayout({
   children: React.ReactNode;
 }>) {
   return (
-    <html lang="en">
+    <html lang="en" className="dark">
       <body className="antialiased">
-        <ClerkProvider publishableKey={process.env.NEXT_PUBLIC_CLERK_PUBLISHABLE_KEY!}>
-          <ConvexProviderWithClerk client={convex} useAuth={useAuth}>
-              {children}
-          </ConvexProviderWithClerk>
-        </ClerkProvider>
+        <ThemeProvider defaultTheme="dark">
+          <ClerkProvider publishableKey={process.env.NEXT_PUBLIC_CLERK_PUBLISHABLE_KEY!}>
+            <ConvexProviderWithClerk client={convex} useAuth={useAuth}>
+                {children}
+            </ConvexProviderWithClerk>
+          </ClerkProvider>
+        </ThemeProvider>
       </body>
     </html>
   );

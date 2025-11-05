@@ -1,16 +1,31 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { useQuery, useMutation } from "convex/react";
 import { api } from "../../../../convex/_generated/api";
 import { Button } from "../../../components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "../../../components/ui/card";
 import { Badge } from "../../../components/ui/badge";
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "../../../components/ui/select";
+import { Label } from "../../../components/ui/label";
 import { Plus, Edit, Trash2 } from "lucide-react";
+import { CreateTransactionModal } from "../../../components/create-transaction-modal";
+import { CreateOrganizationModal } from "../../../components/create-organization-modal";
 
 export default function TransactionsPage() {
-  const [showAddForm, setShowAddForm] = useState(false);
-  const transactions = useQuery(api.transactions.getUserTransactions, {});
+  const organizations = useQuery(api.organizations.getUserOrganizations);
+  const [selectedOrganizationId, setSelectedOrganizationId] = useState<string>("");
+
+  // Set the first organization as selected when organizations load
+  useEffect(() => {
+    if (organizations && organizations.length > 0 && !selectedOrganizationId) {
+      setSelectedOrganizationId(organizations[0]._id);
+    }
+  }, [organizations, selectedOrganizationId]);
+
+  const transactions = useQuery(api.transactions.getUserTransactions, {
+    organizationId: selectedOrganizationId ? selectedOrganizationId as any : undefined
+  });
   const deleteTransaction = useMutation(api.transactions.deleteTransaction);
 
   const handleDelete = async (transactionId: any) => {
@@ -19,10 +34,27 @@ export default function TransactionsPage() {
     }
   };
 
+  if (!organizations || organizations.length === 0) {
+    return (
+      <div className="space-y-6">
+        <div>
+          <h1 className="text-3xl font-bold text-foreground">Transactions</h1>
+          <p className="text-muted-foreground mt-2">Manage your earnings and expenses.</p>
+        </div>
+
+        <div className="flex flex-col items-center justify-center py-12 text-center">
+          <h2 className="text-xl font-semibold text-foreground mb-2">No Organizations Yet</h2>
+          <p className="text-muted-foreground mb-6">Create your first organization to start adding transactions.</p>
+          <CreateOrganizationModal />
+        </div>
+      </div>
+    );
+  }
+
   if (!transactions) {
     return (
       <div className="flex items-center justify-center h-64">
-        <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-blue-600"></div>
+        <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-primary"></div>
       </div>
     );
   }
@@ -31,13 +63,36 @@ export default function TransactionsPage() {
     <div className="space-y-6">
       <div className="flex justify-between items-center">
         <div>
-          <h1 className="text-3xl font-bold text-gray-900">Transactions</h1>
-          <p className="text-gray-600 mt-2">Manage your earnings and expenses.</p>
+          <h1 className="text-3xl font-bold text-foreground">Transactions</h1>
+          <p className="text-muted-foreground mt-2">Manage your earnings and expenses.</p>
         </div>
-        <Button onClick={() => setShowAddForm(true)}>
-          <Plus className="w-4 h-4 mr-2" />
-          Add Transaction
-        </Button>
+        <CreateTransactionModal
+          organizationId={selectedOrganizationId}
+          onSuccess={() => {
+            // The query will automatically refetch when the mutation completes
+          }}
+        >
+          <Button>
+            <Plus className="w-4 h-4 mr-2" />
+            Add Transaction
+          </Button>
+        </CreateTransactionModal>
+      </div>
+
+      <div className="flex items-center gap-4">
+        <Label htmlFor="organization-select">Organization:</Label>
+        <Select value={selectedOrganizationId} onValueChange={setSelectedOrganizationId}>
+          <SelectTrigger className="w-64">
+            <SelectValue />
+          </SelectTrigger>
+          <SelectContent>
+            {organizations?.map((org) => (
+              <SelectItem key={org._id} value={org._id}>
+                {org.name}
+              </SelectItem>
+            ))}
+          </SelectContent>
+        </Select>
       </div>
 
       <div className="grid gap-4">
@@ -52,7 +107,7 @@ export default function TransactionsPage() {
                       {transaction.type}
                     </Badge>
                   </div>
-                  <p className="text-gray-600 mt-1">
+                  <p className="text-muted-foreground mt-1">
                     {new Date(transaction.date).toLocaleDateString()}
                   </p>
                   <div className="flex gap-2 mt-2">
@@ -90,7 +145,7 @@ export default function TransactionsPage() {
         {transactions.length === 0 && (
           <Card>
             <CardContent className="p-12 text-center">
-              <p className="text-gray-500">No transactions yet. Add your first transaction to get started!</p>
+              <p className="text-muted-foreground">No transactions yet. Add your first transaction to get started!</p>
             </CardContent>
           </Card>
         )}
