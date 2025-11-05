@@ -3,8 +3,8 @@ import type { Metadata } from "next";
 import "./globals.css";
 
 export const metadata: Metadata = {
-  title: "Walletree",
-  description: "A simple financial tracking app",
+  title: "Walletree - Take Control of Your Financial Future",
+  description: "Track expenses, monitor earnings, and make smarter financial decisions with Walletree's beautiful, intuitive tools.",
 };
 
 export default function RootLayout({
@@ -14,8 +14,7 @@ export default function RootLayout({
 }>) {
   return (
     <html lang="en">
-      <body
-      >
+      <body className="antialiased">
         {children}
       </body>
     </html>
