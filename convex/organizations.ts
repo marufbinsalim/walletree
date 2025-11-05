@@ -14,12 +14,27 @@ export const getUserOrganizations = query({
 
     if (!user) return [];
 
-    const organizations = await ctx.db
+    // Get organizations where user is owner
+    const ownedOrganizations = await ctx.db
       .query("organizations")
       .withIndex("by_owner", (q) => q.eq("ownerId", user._id))
       .collect();
 
-    return organizations;
+    // Get organizations where user is a member
+    const memberOrganizations = user.organizationId
+      ? await ctx.db
+          .query("organizations")
+          .filter((q) => q.eq(q.field("_id"), user.organizationId))
+          .collect()
+      : [];
+
+    // Combine and deduplicate
+    const allOrganizations = [...ownedOrganizations, ...memberOrganizations];
+    const uniqueOrganizations = allOrganizations.filter(
+      (org, index, self) => index === self.findIndex((o) => o._id === org._id)
+    );
+
+    return uniqueOrganizations;
   },
 });
 
@@ -53,7 +68,9 @@ export const getOrganizationMembers = query({
 
     const members = await ctx.db
       .query("users")
-      .withIndex("by_organization", (q) => q.eq("organizationId", args.organizationId))
+      .withIndex("by_organization", (q) =>
+        q.eq("organizationId", args.organizationId)
+      )
       .collect();
 
     return members;
@@ -152,7 +169,9 @@ export const deleteOrganization = mutation({
     // Delete all transactions associated with this organization
     const organizationTransactions = await ctx.db
       .query("transactions")
-      .withIndex("by_organization", (q) => q.eq("organizationId", args.organizationId))
+      .withIndex("by_organization", (q) =>
+        q.eq("organizationId", args.organizationId)
+      )
       .collect();
 
     for (const transaction of organizationTransactions) {
@@ -162,7 +181,9 @@ export const deleteOrganization = mutation({
     // Remove organization from all users who are members
     const members = await ctx.db
       .query("users")
-      .withIndex("by_organization", (q) => q.eq("organizationId", args.organizationId))
+      .withIndex("by_organization", (q) =>
+        q.eq("organizationId", args.organizationId)
+      )
       .collect();
 
     for (const member of members) {

@@ -12,6 +12,7 @@ export default defineSchema({
     role: v.optional(v.union(v.literal("owner"), v.literal("member"))),
   })
     .index("by_clerk_id", ["clerkId"])
+    .index("by_email", ["email"])
     .index("by_organization", ["organizationId"]),
 
   organizations: defineTable({
@@ -20,14 +21,18 @@ export default defineSchema({
     ownerId: v.id("users"),
     createdAt: v.number(),
     updatedAt: v.number(),
-  })
-    .index("by_owner", ["ownerId"]),
+  }).index("by_owner", ["ownerId"]),
 
   organizationInvites: defineTable({
     organizationId: v.id("organizations"),
     email: v.string(),
     role: v.optional(v.union(v.literal("owner"), v.literal("member"))),
-    status: v.union(v.literal("pending"), v.literal("accepted"), v.literal("declined")),
+    status: v.union(
+      v.literal("pending"),
+      v.literal("accepted"),
+      v.literal("declined"),
+      v.literal("revoked")
+    ),
     invitedBy: v.id("users"),
     invitedAt: v.number(),
     expiresAt: v.number(),

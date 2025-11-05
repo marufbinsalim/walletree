@@ -4,19 +4,30 @@ import { useState } from "react";
 import { useQuery, useMutation } from "convex/react";
 import { api } from "../../../../convex/_generated/api";
 import { Button } from "../../../components/ui/button";
-import { Card, CardContent, CardHeader, CardTitle } from "../../../components/ui/card";
+import {
+  Card,
+  CardContent,
+  CardHeader,
+  CardTitle,
+} from "../../../components/ui/card";
 import { Badge } from "../../../components/ui/badge";
-import { Plus, Users, Settings, Trash2 } from "lucide-react";
+import { Plus, Users, Settings, Trash2, CreditCard } from "lucide-react";
+import Link from "next/link";
 import { CreateOrganizationModal } from "../../../components/create-organization-modal";
 import { DeleteOrganizationModal } from "../../../components/delete-organization-modal";
+import { ManageMembersModal } from "../../../components/manage-members-modal";
 
 export default function OrganizationsPage() {
+  const [selectedOrgForMembers, setSelectedOrgForMembers] = useState<
+    string | null
+  >(null);
   const organizations = useQuery(api.organizations.getUserOrganizations);
+  const currentUser = useQuery(api.users.getCurrentUser);
 
   if (!organizations) {
     return (
-      <div className="flex items-center justify-center h-64">
-        <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-blue-600"></div>
+      <div className="flex justify-center items-center h-64">
+        <div className="border-blue-600 border-b-2 rounded-full w-8 h-8 animate-spin"></div>
       </div>
     );
   }
@@ -25,13 +36,15 @@ export default function OrganizationsPage() {
     <div className="space-y-6">
       <div className="flex justify-between items-center">
         <div>
-          <h1 className="text-3xl font-bold text-foreground">Organizations</h1>
-          <p className="text-muted-foreground mt-2">Manage your organizations and team members.</p>
+          <h1 className="font-bold text-foreground text-3xl">Organizations</h1>
+          <p className="mt-2 text-muted-foreground">
+            Manage your organizations and team members.
+          </p>
         </div>
         <CreateOrganizationModal />
       </div>
 
-      <div className="grid gap-4">
+      <div className="gap-4 grid">
         {organizations.map((org) => (
           <Card key={org._id}>
             <CardContent className="p-6">
@@ -42,26 +55,40 @@ export default function OrganizationsPage() {
                     <Badge variant="outline">Owner</Badge>
                   </div>
                   {org.description && (
-                    <p className="text-muted-foreground mt-1">{org.description}</p>
+                    <p className="mt-1 text-muted-foreground">
+                      {org.description}
+                    </p>
                   )}
-                  <p className="text-sm text-muted-foreground mt-2">
+                  <p className="mt-2 text-muted-foreground text-sm">
                     Created {new Date(org.createdAt).toLocaleDateString()}
                   </p>
                 </div>
                 <div className="flex gap-2">
-                  <Button variant="outline" size="sm">
-                    <Users className="w-4 h-4 mr-2" />
+                  <Link href={`/dashboard/organizations/${org._id}`}>
+                    <Button variant="outline" size="sm">
+                      <CreditCard className="mr-2 w-4 h-4" />
+                      Transactions
+                    </Button>
+                  </Link>
+                  <Button
+                    variant="outline"
+                    size="sm"
+                    onClick={() => setSelectedOrgForMembers(org._id)}
+                  >
+                    <Users className="mr-2 w-4 h-4" />
                     Members
                   </Button>
-                  <DeleteOrganizationModal
-                    organizationId={org._id}
-                    organizationName={org.name}
-                  >
-                    <Button variant="destructive" size="sm">
-                      <Trash2 className="w-4 h-4 mr-2" />
-                      Delete
-                    </Button>
-                  </DeleteOrganizationModal>
+                  {org.ownerId === currentUser?._id && (
+                    <DeleteOrganizationModal
+                      organizationId={org._id}
+                      organizationName={org.name}
+                    >
+                      <Button variant="destructive" size="sm">
+                        <Trash2 className="mr-2 w-4 h-4" />
+                        Delete
+                      </Button>
+                    </DeleteOrganizationModal>
+                  )}
                 </div>
               </div>
             </CardContent>
@@ -71,10 +98,12 @@ export default function OrganizationsPage() {
         {organizations.length === 0 && (
           <Card>
             <CardContent className="p-12 text-center">
-              <p className="text-muted-foreground mb-4">No organizations yet.</p>
+              <p className="mb-4 text-muted-foreground">
+                No organizations yet.
+              </p>
               <CreateOrganizationModal>
                 <Button>
-                  <Plus className="w-4 h-4 mr-2" />
+                  <Plus className="mr-2 w-4 h-4" />
                   Create Your First Organization
                 </Button>
               </CreateOrganizationModal>
@@ -82,6 +111,14 @@ export default function OrganizationsPage() {
           </Card>
         )}
       </div>
+
+      {selectedOrgForMembers && (
+        <ManageMembersModal
+          organizationId={selectedOrgForMembers}
+          isOpen={!!selectedOrgForMembers}
+          onClose={() => setSelectedOrgForMembers(null)}
+        />
+      )}
     </div>
   );
 }

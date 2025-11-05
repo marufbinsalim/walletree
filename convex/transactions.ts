@@ -44,7 +44,8 @@ export const getMonthlyStats = query({
   args: { organizationId: v.optional(v.id("organizations")) },
   handler: async (ctx, args) => {
     const identity = await ctx.auth.getUserIdentity();
-    if (!identity) return { totalSpent: 0, totalEarned: 0, transactionCount: 0 };
+    if (!identity)
+      return { totalSpent: 0, totalEarned: 0, transactionCount: 0 };
 
     const user = await ctx.db
       .query("users")
@@ -54,8 +55,19 @@ export const getMonthlyStats = query({
     if (!user) throw new Error("User not found");
 
     const now = new Date();
-    const startOfMonth = new Date(now.getFullYear(), now.getMonth(), 1).getTime();
-    const endOfMonth = new Date(now.getFullYear(), now.getMonth() + 1, 0, 23, 59, 59).getTime();
+    const startOfMonth = new Date(
+      now.getFullYear(),
+      now.getMonth(),
+      1
+    ).getTime();
+    const endOfMonth = new Date(
+      now.getFullYear(),
+      now.getMonth() + 1,
+      0,
+      23,
+      59,
+      59
+    ).getTime();
 
     let transactionsQuery = ctx.db
       .query("transactions")
@@ -118,7 +130,7 @@ export const createTransaction = mutation({
       .withIndex("by_clerk_id", (q) => q.eq("clerkId", identity.subject))
       .first();
 
-    if (!user) throw new Error("User not found");
+    if (!user) return { totalSpent: 0, totalEarned: 0, transactionCount: 0 };
 
     if (args.organizationId) {
       const isMember = await ctx.db
