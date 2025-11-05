@@ -1,11 +1,11 @@
-import type { Metadata } from "next";
+"use client";
 
+import { ClerkProvider, useAuth } from '@clerk/nextjs';
+import { ConvexReactClient } from "convex/react";
 import "./globals.css";
+import { ConvexProviderWithClerk } from 'convex/react-clerk';
 
-export const metadata: Metadata = {
-  title: "Walletree - Take Control of Your Financial Future",
-  description: "Track expenses, monitor earnings, and make smarter financial decisions with Walletree's beautiful, intuitive tools.",
-};
+const convex = new ConvexReactClient(process.env.NEXT_PUBLIC_CONVEX_URL!);
 
 export default function RootLayout({
   children,
@@ -15,7 +15,11 @@ export default function RootLayout({
   return (
     <html lang="en">
       <body className="antialiased">
-        {children}
+        <ClerkProvider publishableKey={process.env.NEXT_PUBLIC_CLERK_PUBLISHABLE_KEY!}>
+          <ConvexProviderWithClerk client={convex} useAuth={useAuth}>
+              {children}
+          </ConvexProviderWithClerk>
+        </ClerkProvider>
       </body>
     </html>
   );
