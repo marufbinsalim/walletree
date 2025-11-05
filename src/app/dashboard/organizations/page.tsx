@@ -7,18 +7,10 @@ import { Button } from "../../../components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "../../../components/ui/card";
 import { Badge } from "../../../components/ui/badge";
 import { Plus, Users, Settings } from "lucide-react";
+import { CreateOrganizationModal } from "../../../components/create-organization-modal";
 
 export default function OrganizationsPage() {
-  const [showCreateForm, setShowCreateForm] = useState(false);
   const organizations = useQuery(api.organizations.getUserOrganizations);
-  const createOrganization = useMutation(api.organizations.createOrganization);
-
-  const handleCreateOrganization = async () => {
-    const name = prompt("Enter organization name:");
-    if (name) {
-      await createOrganization({ name });
-    }
-  };
 
   if (!organizations) {
     return (
@@ -35,10 +27,7 @@ export default function OrganizationsPage() {
           <h1 className="text-3xl font-bold text-gray-900">Organizations</h1>
           <p className="text-gray-600 mt-2">Manage your organizations and team members.</p>
         </div>
-        <Button onClick={handleCreateOrganization}>
-          <Plus className="w-4 h-4 mr-2" />
-          Create Organization
-        </Button>
+        <CreateOrganizationModal />
       </div>
 
       <div className="grid gap-4">
@@ -77,10 +66,12 @@ export default function OrganizationsPage() {
           <Card>
             <CardContent className="p-12 text-center">
               <p className="text-gray-500 mb-4">No organizations yet.</p>
-              <Button onClick={handleCreateOrganization}>
-                <Plus className="w-4 h-4 mr-2" />
-                Create Your First Organization
-              </Button>
+              <CreateOrganizationModal>
+                <Button>
+                  <Plus className="w-4 h-4 mr-2" />
+                  Create Your First Organization
+                </Button>
+              </CreateOrganizationModal>
             </CardContent>
           </Card>
         )}
