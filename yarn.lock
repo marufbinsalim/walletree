@@ -300,6 +300,14 @@
     std-env "^3.9.0"
     swr "2.3.4"
 
+"@clerk/themes@^2.4.32":
+  version "2.4.32"
+  resolved "https://registry.yarnpkg.com/@clerk/themes/-/themes-2.4.32.tgz#d7becc000e7b79e50f408e7d26d2b7ebf11a228b"
+  integrity sha512-IWiV3r5C7HYQxVVR89SP/eEa/nhWxhMl4DXbuez3nWH43XOHw2uWb5xu4imBMPCoayf0yXDotYuY2CFdwuSwmg==
+  dependencies:
+    "@clerk/shared" "^3.31.0"
+    tslib "2.8.1"
+
 "@clerk/types@^4.97.1":
   version "4.97.1"
   resolved "https://registry.yarnpkg.com/@clerk/types/-/types-4.97.1.tgz#6c619f538d883ff990669cf2b68321ad1de8d315"
