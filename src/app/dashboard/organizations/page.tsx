@@ -1,14 +1,12 @@
 "use client";
 
 import { useState } from "react";
-import { useQuery, useMutation } from "convex/react";
+import { useQuery } from "convex/react";
 import { api } from "../../../../convex/_generated/api";
 import { Button } from "../../../components/ui/button";
 import {
   Card,
   CardContent,
-  CardHeader,
-  CardTitle,
 } from "../../../components/ui/card";
 import { Badge } from "../../../components/ui/badge";
 import { Plus, Users, Settings, Trash2, CreditCard } from "lucide-react";
@@ -65,7 +63,7 @@ export default function OrganizationsPage() {
                     Created {new Date(org.createdAt).toLocaleDateString()}
                   </p>
                 </div>
-                <div className="flex flex-col sm:flex-row gap-2">
+                <div className="flex flex-col sm:flex-row gap-2 flex-wrap">
                   <Link href={`/dashboard/organizations/${org._id}`} className="flex-1">
                     <Button variant="outline" size="sm" className="w-full">
                       <CreditCard className="mr-2 w-4 h-4" />
@@ -74,7 +72,6 @@ export default function OrganizationsPage() {
                   </Link>
                   <Button
                     variant="outline"
-                    size="sm"
                     onClick={() => setSelectedOrgForMembers(org._id)}
                     className="flex-1"
                   >
@@ -86,7 +83,7 @@ export default function OrganizationsPage() {
                       organizationId={org._id}
                       organizationName={org.name}
                     >
-                      <Button variant="destructive" size="sm" className="flex-1">
+                      <Button variant="destructive" className="flex-1">
                         <Trash2 className="mr-2 w-4 h-4" />
                         Delete
                       </Button>

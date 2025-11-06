@@ -1,15 +1,12 @@
 "use client";
 
-import { useState, useEffect } from "react";
 import { useParams } from "next/navigation";
-import { useQuery, useMutation } from "convex/react";
+import { useQuery } from "convex/react";
 import { api } from "../../../../../convex/_generated/api";
 import { Button } from "../../../../components/ui/button";
 import {
   Card,
   CardContent,
-  CardHeader,
-  CardTitle,
 } from "../../../../components/ui/card";
 import { Badge } from "../../../../components/ui/badge";
 import { Plus, Edit, Trash2, ArrowLeft } from "lucide-react";
@@ -17,7 +14,6 @@ import { CreateTransactionModal } from "../../../../components/create-transactio
 import { DeleteTransactionModal } from "../../../../components/delete-transaction-modal";
 import { EditTransactionModal } from "../../../../components/edit-transaction-modal";
 import Link from "next/link";
-import toast from "react-hot-toast";
 
 export default function OrganizationTransactionsPage() {
   const { organization_id } = useParams();
@@ -28,7 +24,6 @@ export default function OrganizationTransactionsPage() {
   const transactions = useQuery(api.transactions.getUserTransactions, {
     organizationId: organization ? (organizationId as any) : undefined,
   });
-  const deleteTransaction = useMutation(api.transactions.deleteTransaction);
 
   if (!organizations) {
     return (

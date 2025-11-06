@@ -206,7 +206,7 @@ export const kickMember = mutation({
     }
 
     // Remove user from organization by declining their invite
-    await ctx.db.patch(targetUserInvite._id, { status: "declined" });
+    await ctx.db.delete(targetUserInvite._id);
 
     return args.userId;
   },

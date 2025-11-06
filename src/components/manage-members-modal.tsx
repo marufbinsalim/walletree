@@ -4,7 +4,7 @@ import { useState } from "react";
 import { useQuery, useMutation } from "convex/react";
 import { api } from "../../convex/_generated/api";
 import { Button } from "./ui/button";
-import { Dialog, DialogContent, DialogHeader, DialogTitle } from "./ui/dialog";
+import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from "./ui/dialog";
 import { Input } from "./ui/input";
 import { Label } from "./ui/label";
 import { Badge } from "./ui/badge";
@@ -25,6 +25,7 @@ import {
   XCircle,
 } from "lucide-react";
 import toast from "react-hot-toast";
+import { cn } from "@/lib/utils";
 
 interface ManageMembersModalProps {
   organizationId: string;
@@ -38,7 +39,11 @@ export function ManageMembersModal({
   onClose,
 }: ManageMembersModalProps) {
   const [inviteEmail, setInviteEmail] = useState("");
+  const [inviteId, setInviteId] = useState<string | null>(null);
   const [inviteRole, setInviteRole] = useState<"owner" | "member">("member");
+  const [isKickModalOpen, setIsKickModalOpen] = useState(false);
+  const [isRevokeModalOpen, setIsRevokeModalOpen] = useState(false);
+  const [selectedMemberToKick, setSelectedMemberToKick] = useState<string | null>(null);
 
   const members = useQuery(api.organizations.getOrganizationMembers, {
     organizationId: organizationId as any,
@@ -75,77 +80,24 @@ export function ManageMembersModal({
     }
   };
 
-  const handleRevokeInvite = async (inviteId: string) => {
-    toast((t) => (
-      <div>
-        <p>Are you sure you want to revoke this invite?</p>
-        <div className="flex gap-2 mt-2">
-          <button
-            onClick={async () => {
-              try {
-                await revokeInvite({ inviteId: inviteId as any });
-                toast.dismiss(t.id);
-                toast.success("Invite revoked successfully!");
-              } catch (error) {
-                toast.dismiss(t.id);
-                toast.error(
-                  error instanceof Error
-                    ? error.message
-                    : "Failed to revoke invite"
-                );
-              }
-            }}
-            className="bg-red-600 px-3 py-1 rounded text-white text-sm"
-          >
-            Revoke
-          </button>
-          <button
-            onClick={() => toast.dismiss(t.id)}
-            className="bg-gray-600 px-3 py-1 rounded text-white text-sm"
-          >
-            Cancel
-          </button>
-        </div>
-      </div>
-    ));
-  };
 
-  const handleKickMember = async (userId: string) => {
-    toast((t) => (
-      <div>
-        <p>Are you sure you want to remove this member?</p>
-        <div className="flex gap-2 mt-2">
-          <button
-            onClick={async () => {
-              try {
-                await kickMember({
-                  userId: userId as any,
-                  organizationId: organizationId as any,
-                });
-                toast.dismiss(t.id);
-                toast.success("Member removed successfully!");
-              } catch (error) {
-                toast.dismiss(t.id);
-                toast.error(
-                  error instanceof Error
-                    ? error.message
-                    : "Failed to remove member"
-                );
-              }
-            }}
-            className="bg-red-600 px-3 py-1 rounded text-white text-sm"
-          >
-            Remove
-          </button>
-          <button
-            onClick={() => toast.dismiss(t.id)}
-            className="bg-gray-600 px-3 py-1 rounded text-white text-sm"
-          >
-            Cancel
-          </button>
-        </div>
-      </div>
-    ));
+
+  const handleConfirmKick = async () => {
+    if (!selectedMemberToKick) return;
+
+    try {
+      await kickMember({
+        userId: selectedMemberToKick as any,
+        organizationId: organizationId as any,
+      });
+      toast.success("Member kicked successfully!");
+      setIsKickModalOpen(false);
+      setSelectedMemberToKick(null);
+    } catch (error) {
+      toast.error(
+        error instanceof Error ? error.message : "Failed to kick member"
+      );
+    }
   };
 
   const getStatusIcon = (status: string) => {
@@ -200,7 +152,7 @@ export function ManageMembersModal({
           </TabsList>
 
           <TabsContent value="members" className="space-y-4">
-            <div className="space-y-4">
+            <div className={cn("space-y-4", isKickModalOpen && "blur-sm")}>
               {members?.map((member) => (
                 <div
                   key={member._id}
@@ -237,7 +189,10 @@ export function ManageMembersModal({
                       <Button
                         variant="outline"
                         size="sm"
-                        onClick={() => handleKickMember(member._id)}
+                        onClick={() => {
+                          setSelectedMemberToKick(member._id);
+                          setIsKickModalOpen(true);
+                        }}
                       >
                         <UserMinus className="w-4 h-4" />
                       </Button>
@@ -246,6 +201,27 @@ export function ManageMembersModal({
                 </div>
               ))}
             </div>
+            <Dialog open={isKickModalOpen} onOpenChange={setIsKickModalOpen}>
+              <DialogContent>
+                <DialogHeader>
+                  <DialogTitle>Confirm Kick Member</DialogTitle>
+                </DialogHeader>
+                <div className="py-4">
+                  Are you sure you want to kick this member from the
+                  organization?
+                </div>
+                <DialogFooter>
+                  <Button
+                    variant="outline"
+                    onClick={() => setIsKickModalOpen(false)}
+                  >
+                    Cancel
+                  </Button>
+                  <Button onClick={handleConfirmKick}>Kick Member</Button>
+                </DialogFooter>
+              </DialogContent>
+            </Dialog>
+
           </TabsContent>
 
           {isOwner && (
@@ -323,7 +299,10 @@ export function ManageMembersModal({
                         <Button
                           variant="outline"
                           size="sm"
-                          onClick={() => handleRevokeInvite(invite._id)}
+                          onClick={() => {
+                            setInviteId(invite._id);
+                            setIsRevokeModalOpen(true)
+                          }}
                         >
                           <Trash2 className="w-4 h-4" />
                         </Button>
@@ -337,6 +316,44 @@ export function ManageMembersModal({
                   </div>
                 )}
               </div>
+
+              <Dialog
+                open={isRevokeModalOpen}
+                onOpenChange={setIsRevokeModalOpen}
+              >
+                <DialogContent>
+                  <DialogHeader>
+                    <DialogTitle>Confirm Revoke Invite</DialogTitle>
+                  </DialogHeader>
+                  <div className="py-4">
+                    Are you sure you want to revoke this invite?
+                  </div>
+                  <DialogFooter>
+                    <Button
+                      variant="outline"
+                      onClick={() => setIsRevokeModalOpen(false)}
+                    >
+                      Cancel
+                    </Button>
+                    <Button
+                      onClick={async () => {
+                        try {
+                          await revokeInvite({ inviteId: inviteId as any });
+                        } catch (error) {
+                          console.error(error);
+                        }
+                        finally {
+                          setIsRevokeModalOpen(false);  
+                        }
+                      }}
+                    >
+                      Revoke Invite
+                    </Button>
+                  </DialogFooter>
+                </DialogContent>
+              </Dialog>
+
+
             </TabsContent>
           )}
         </Tabs>
