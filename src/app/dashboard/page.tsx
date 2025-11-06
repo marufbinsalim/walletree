@@ -194,13 +194,13 @@ export default function DashboardPage() {
         </p>
       </div>
 
-      <div className="flex items-center gap-4">
+      <div className="flex flex-col sm:flex-row sm:items-center gap-4">
         <Label htmlFor="organization-select">Organization:</Label>
         <Select
           value={selectedOrganizationId}
           onValueChange={setSelectedOrganizationId}
         >
-          <SelectTrigger className="w-64">
+          <SelectTrigger className="w-full sm:w-64">
             <SelectValue />
           </SelectTrigger>
           <SelectContent>

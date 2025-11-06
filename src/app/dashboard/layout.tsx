@@ -5,14 +5,14 @@ import { ConvexProvider, ConvexReactClient } from "convex/react";
 import { UserButton } from "@clerk/nextjs";
 import Link from "next/link";
 import { usePathname, useRouter } from "next/navigation";
-import { useEffect } from "react";
+import { useEffect, useState } from "react";
 import { cn } from "../../lib/utils";
 import { ConvexProviderWithClerk } from "convex/react-clerk";
 import { ThemeToggle } from "../../components/ui/theme-toggle";
 import { useQuery } from "convex/react";
 import { api } from "../../../convex/_generated/api";
 import { Badge } from "../../components/ui/badge";
-import { Bell } from "lucide-react";
+import { Bell, Menu, X } from "lucide-react";
 
 const convex = new ConvexReactClient(process.env.NEXT_PUBLIC_CONVEX_URL!);
 
@@ -31,6 +31,7 @@ export default function DashboardLayout({
   const router = useRouter();
   const { isSignedIn, isLoaded } = useAuth();
   const pendingInvites = useQuery(api.invites.getPendingInvitesForUser);
+  const [sidebarOpen, setSidebarOpen] = useState(false);
 
   useEffect(() => {
     if (isLoaded && !isSignedIn) {
@@ -61,6 +62,12 @@ export default function DashboardLayout({
             <div className="mx-auto px-4 sm:px-6 lg:px-8 max-w-7xl">
               <div className="flex justify-between items-center h-16">
                 <div className="flex items-center">
+                  <button
+                    onClick={() => setSidebarOpen(!sidebarOpen)}
+                    className="mr-4 md:hidden p-2 rounded-md text-muted-foreground hover:bg-accent hover:text-accent-foreground"
+                  >
+                    {sidebarOpen ? <X className="w-6 h-6" /> : <Menu className="w-6 h-6" />}
+                  </button>
                   <Link
                     href="/dashboard"
                     className="font-bold text-primary text-xl"
@@ -95,13 +102,18 @@ export default function DashboardLayout({
 
           <div className="flex">
             {/* Sidebar */}
-            <nav className="bg-card shadow-sm border-border border-r w-64 min-h-[calc(100vh-4rem)]">
+            <nav className={cn(
+              "bg-card shadow-sm border-border border-r w-64 min-h-[calc(100vh-4rem)] transition-transform duration-300 ease-in-out",
+              "md:translate-x-0 md:static md:block",
+              sidebarOpen ? "translate-x-0 fixed inset-y-0 left-0 z-50" : "-translate-x-full fixed inset-y-0 left-0 z-50 md:relative md:translate-x-0"
+            )}>
               <div className="p-6">
                 <ul className="space-y-2">
                   {navigation.map((item) => (
                     <li key={item.name}>
                       <Link
                         href={item.href}
+                        onClick={() => setSidebarOpen(false)}
                         className={cn(
                           "block px-3 py-2 rounded-md font-medium text-sm transition-colors",
                           pathname === item.href
@@ -117,8 +129,16 @@ export default function DashboardLayout({
               </div>
             </nav>
 
+            {/* Overlay for mobile */}
+            {sidebarOpen && (
+              <div
+                className="fixed inset-0 bg-black bg-opacity-50 z-40 md:hidden"
+                onClick={() => setSidebarOpen(false)}
+              />
+            )}
+
             {/* Main content */}
-            <main className="flex-1 p-8">{children}</main>
+            <main className="flex-1 p-4 md:p-8">{children}</main>
           </div>
         </div>
       </ConvexProviderWithClerk>

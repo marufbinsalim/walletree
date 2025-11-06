@@ -34,7 +34,7 @@ export default function OrganizationsPage() {
 
   return (
     <div className="space-y-6">
-      <div className="flex justify-between items-center">
+      <div className="flex flex-col sm:flex-row sm:justify-between sm:items-center gap-4">
         <div>
           <h1 className="font-bold text-foreground text-3xl">Organizations</h1>
           <p className="mt-2 text-muted-foreground">
@@ -44,13 +44,13 @@ export default function OrganizationsPage() {
         <CreateOrganizationModal />
       </div>
 
-      <div className="gap-4 grid">
+      <div className="gap-4 grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3">
         {organizations.map((org) => (
           <Card key={org._id}>
             <CardContent className="p-6">
-              <div className="flex justify-between items-start">
+              <div className="flex flex-col space-y-4">
                 <div className="flex-1">
-                  <div className="flex items-center gap-3">
+                  <div className="flex flex-col sm:flex-row sm:items-center gap-3">
                     <h3 className="font-semibold text-lg">{org.name}</h3>
                     <Badge variant="outline">
                       {org.ownerId === currentUser?._id ? "Owner" : "Member"}
@@ -65,9 +65,9 @@ export default function OrganizationsPage() {
                     Created {new Date(org.createdAt).toLocaleDateString()}
                   </p>
                 </div>
-                <div className="flex gap-2">
-                  <Link href={`/dashboard/organizations/${org._id}`}>
-                    <Button variant="outline" size="sm">
+                <div className="flex flex-col sm:flex-row gap-2">
+                  <Link href={`/dashboard/organizations/${org._id}`} className="flex-1">
+                    <Button variant="outline" size="sm" className="w-full">
                       <CreditCard className="mr-2 w-4 h-4" />
                       Transactions
                     </Button>
@@ -76,6 +76,7 @@ export default function OrganizationsPage() {
                     variant="outline"
                     size="sm"
                     onClick={() => setSelectedOrgForMembers(org._id)}
+                    className="flex-1"
                   >
                     <Users className="mr-2 w-4 h-4" />
                     Members
@@ -85,7 +86,7 @@ export default function OrganizationsPage() {
                       organizationId={org._id}
                       organizationName={org.name}
                     >
-                      <Button variant="destructive" size="sm">
+                      <Button variant="destructive" size="sm" className="flex-1">
                         <Trash2 className="mr-2 w-4 h-4" />
                         Delete
                       </Button>

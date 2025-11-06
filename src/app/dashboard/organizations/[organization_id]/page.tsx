@@ -66,7 +66,7 @@ export default function OrganizationTransactionsPage() {
 
   return (
     <div className="space-y-6">
-      <div className="flex justify-between items-center">
+      <div className="flex flex-col sm:flex-row sm:justify-between sm:items-center gap-4">
         <div className="flex items-center gap-4">
           <Link href="/dashboard/organizations">
             <Button variant="outline" size="sm">
@@ -75,7 +75,7 @@ export default function OrganizationTransactionsPage() {
             </Button>
           </Link>
           <div>
-            <h1 className="font-bold text-foreground text-3xl">
+            <h1 className="font-bold text-foreground text-2xl sm:text-3xl">
               {organization.name} Transactions
             </h1>
             <p className="mt-2 text-muted-foreground">
@@ -89,7 +89,7 @@ export default function OrganizationTransactionsPage() {
             // The query will automatically refetch when the mutation completes
           }}
         >
-          <Button>
+          <Button className="w-full sm:w-auto">
             <Plus className="mr-2 w-4 h-4" />
             Add Transaction
           </Button>
